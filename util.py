@@ -1,9 +1,7 @@
 import base64
-
 import streamlit as st
 from PIL import ImageOps, Image
 import numpy as np
-
 
 def set_background(image_file):
     """
@@ -15,9 +13,14 @@ def set_background(image_file):
     Returns:
         None
     """
+    # Open the image file in binary read mode
     with open(image_file, "rb") as f:
-        img_data = f.read()
+        img_data = f.read()  # Read the image data
+
+    # Encode the image data to base64 format
     b64_encoded = base64.b64encode(img_data).decode()
+
+    # Create a CSS style block to set the background image
     style = f"""
         <style>
         .stApp {{
@@ -26,6 +29,8 @@ def set_background(image_file):
         }}
         </style>
     """
+    
+    # Inject the CSS style into the Streamlit app
     st.markdown(style, unsafe_allow_html=True)
 
 
@@ -42,23 +47,26 @@ def classify(image, model, class_names):
     Returns:
         A tuple of the predicted class name and the confidence score for that prediction.
     """
-    # convert image to (224, 224)
+    # Convert image to 224x224 pixels
     image = ImageOps.fit(image, (224, 224), Image.Resampling.LANCZOS)
 
-    # convert image to numpy array
+    # Convert image to a numpy array
     image_array = np.asarray(image)
 
-    # normalize image
+    # Normalize image data to the range [-1, 1]
     normalized_image_array = (image_array.astype(np.float32) / 127.5) - 1
 
-    # set model input
+    # Prepare the image data to fit the model input shape
     data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
     data[0] = normalized_image_array
 
-    # make prediction
+    # Make a prediction with the model
     prediction = model.predict(data)
-    # index = np.argmax(prediction)
+
+    # Determine the index based on the threshold of 0.95
     index = 0 if prediction[0][0] > 0.95 else 1
+
+    # Get the predicted class name and confidence score
     class_name = class_names[index]
     confidence_score = prediction[0][index]
 
